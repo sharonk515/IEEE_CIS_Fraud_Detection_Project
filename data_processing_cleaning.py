@@ -132,11 +132,6 @@ def Feature_Engineering(df_train, df_test):
     new features.
     df: input dataframe
     """
-    #Building new features for emaildomain
-    for feature in ['P_emaildomain', 'R_emaildomain']:
-        df_train[[f'{feature}_{i}' for i in range(1, 4)]] = df_train[feature].str.split('.', expand=True)
-        df_test[[f'{feature}_{i}' for i in range(1, 4)]] = df_test[feature].str.split('.', expand=True)
-    
     #normalizing several columns to mean of each them for card1 and card4
     for col in ['TransactionAmt', 'D15']:
         for feature in ['card1', 'card4']:
@@ -148,8 +143,8 @@ def Feature_Engineering(df_train, df_test):
 
         
     #Normalizing TransactionAmt
-#     df_train['TransactionAmt'] = np.log(df_train['TransactionAmt'])
-#     df_test['TransactionAmt'] = np.log(df_test['TransactionAmt'])
+    #df_train['TransactionAmt'] = np.log(df_train['TransactionAmt'])
+    #df_test['TransactionAmt'] = np.log(df_test['TransactionAmt'])
 
     mean_train = df_train['TransactionAmt'].mean()
     std_train = df_train['TransactionAmt'].std()
@@ -176,13 +171,19 @@ def Feature_Engineering(df_train, df_test):
     df['screen_width'] = df['id_33'].str.split('x', expand=True)[0]
     df['screen_height'] = df['id_33'].str.split('x', expand=True)[1]
     
-    df.drop(columns = ['DeviceInfo', 'id_30', 'id_31', 'id_33'], inplace = True)
+    #Building new features for emaildomain
+    for feature in ['P_emaildomain', 'R_emaildomain']:
+        df[[f'{feature}_{i}' for i in range(1, 4)]] = df[feature].str.split('.', expand=True)
+    cols_drop = ['DeviceInfo', 'id_30', 'id_31', 'id_33', 'P_emaildomain', 'R_emaildomain']
+    df.drop(columns = cols_drop, inplace = True)
     
     # New feature - day of week in which a transaction happened.
     df['Transaction_day_of_week'] = np.floor((df['TransactionDT'] / (3600 * 24) - 1) % 7)
     
     # New feature - hour of the day in which a transaction happened.
     df['Transaction_hour'] = np.floor(df['TransactionDT'] / 3600) % 24
+    
+
     
     #device name
     devices = {'SM':'Samsung', 'SAMSUNG':'Samsung', 'GT-':'Samsung', 
@@ -197,6 +198,69 @@ def Feature_Engineering(df_train, df_test):
     df.loc[df['device_name'].isin(df['device_name'].value_counts()\
                                   [df['device_name'].value_counts()\
                                    < 200].index), 'device_name'] = "Others"
+    df.loc[df['id_14'].isin(df['id_14'].value_counts()\
+                              [df['id_14'].value_counts()\
+                               < 50].index), 'id_14'] = "Others"
+    
+    df.loc[df['id_13'].isin(df['id_13'].value_counts()\
+                          [df['id_13'].value_counts()\
+                           < 200].index), 'id_13'] = "Others"
+    
+    df.loc[df['id_17'].isin(df['id_17'].value_counts()\
+                      [df['id_17'].value_counts()\
+                       < 200].index), 'id_17'] = "Others"
+    
+    df.loc[df['id_19'].isin(df['id_19'].value_counts()\
+                      [df['id_19'].value_counts()\
+                       < 200].index), 'id_19'] = "Others"
+    df.loc[df['id_20'].isin(df['id_20'].value_counts()\
+                      [df['id_20'].value_counts()\
+                       < 200].index), 'id_20'] = "Others"
+    
+    df.loc[df['id_32'].isin(df['id_32'].value_counts()\
+                      [df['id_32'].value_counts()\
+                       < 10].index), 'id_32'] = "Others"
+    df.loc[df['P_emaildomain_1'].isin(df['P_emaildomain_1'].value_counts()\
+                      [df['P_emaildomain_1'].value_counts()\
+                       < 100].index), 'P_emaildomain_1'] = "Others"
+    
+    df.loc[df['R_emaildomain_1'].isin(df['R_emaildomain_1'].value_counts()\
+                  [df['R_emaildomain_1'].value_counts()\
+                   < 50].index), 'R_emaildomain_1'] = "Others"
+    
+    df.loc[df['R_emaildomain_2'].isin(df['R_emaildomain_2'].value_counts()\
+              [df['R_emaildomain_2'].value_counts()\
+               < 50].index), 'R_emaildomain_2'] = "Others"
+    
+    df.loc[df['P_emaildomain_2'].isin(df['P_emaildomain_2'].value_counts()\
+          [df['P_emaildomain_2'].value_counts()\
+           < 50].index), 'P_emaildomain_2'] = "Others"
+    
+    df.loc[df['version_id_31'].isin(df['version_id_31'].value_counts()\
+          [df['version_id_31'].value_counts()\
+           < 50].index), 'version_id_31'] = "Others"
+    
+    version_id = {'10.3.3':'10V', '11.2.2':'11V', '11.0.0':'11', '5.1.1':'5V',
+     '11.1.1':'11V', '11.2.1':'11V', '7.0':'7', '11.1.2':'11V',
+     '8.1':'8V', '11.2.5':'11V', '11.2.0':'11V', '11.3.0':'11V',
+     '11.1.0':'11V', '10.3.2':'10V', '7.1.1':'7V', '10.3.1':'10V',
+     '9.3.5':'9V','11.2.6':'11V', '11.0.1':'11V', '8.0.0':'8', 
+     '11.0.3':'11V', '6.0.1':'6V', '10.2.0':'10V', '10.2.1':'10V',
+     '5.0.2':'5V', '10.0.2':'10V', '8.1.0':'8V', '5.0':'5', 
+     '10.1.1':'10V','11.0.2':'11V', '11.3.1':'11V', '11.4.0':'11V',
+     '7.1.2':'7V', '4.4.2':'4V', '6.0':'6','OS':'OS', np.nan:'noinfo',
+     'Vista':'Vista', 'XP':'XP','5':'5', '6':'6', '7':'7', '8':'8', 
+     '9':'9', '10':'10'}
+    df['version_id_30'] = df['version_id_30'].map(version_id)
+    
+    df.loc[df['screen_width'].isin(df['screen_width'].value_counts()\
+          [df['screen_width'].value_counts()\
+           < 100].index), 'screen_width'] = "Others"
+    
+    df.loc[df['screen_height'].isin(df['screen_height'].value_counts()\
+          [df['screen_height'].value_counts()\
+           < 100].index), 'screen_height'] = "Others"
+
     
     
     #Return to train and test dataframes and remove train columns 
@@ -228,8 +292,11 @@ def data_cleaning_for_training(X_train, X_test):
                             big_top_value_cols_train
                             + big_top_value_cols_test))
     
-    cols_to_drop.append('TransactionID')
-    cols_to_drop.append('TransactionDT')
+     
+    cols_to_drop.extend(['TransactionID', 'TransactionDT', 
+                         'card2', 'card3','card4', 'card5',
+                         'addr2', 'addr1'])
+
     #print(*cols_to_drop)
     
     X_train = X_train.drop(cols_to_drop, axis=1)
@@ -378,7 +445,7 @@ def resumetable(df):
 
 def fill_na_values(X_train, X_test):
     """
-    this function is written to fill na values
+    This function is written to fill na values
     """
     # We found that that there is dependency between
     # cards (e.g., сard2 and card1) values.
