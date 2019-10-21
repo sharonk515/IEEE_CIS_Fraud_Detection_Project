@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+
 def Convert_categorical_variables(X_train, X_test):
     """
     The goal of the function to convert categorical variables to dummies
@@ -23,15 +24,36 @@ def Convert_categorical_variables(X_train, X_test):
     df.columns = X_train.columns
     
     #Columns to be converted to dummies
-    cols_to_transform = [col for col in df.columns if X_train[col].dtype == object]
+    #columns_with_large_numbers of unqiue values
+    col_large_unqiues = ['id_13','id_14','id_17','id_18',
+                         'id_19','id_20','id_21','id_25',
+                         'id_26','id_30',
+                         'id_31','id_33']
+    #cols_to_transform = [col for col in df.columns if X_train[col].dtype == object]
+    cats = ['id_12', 'id_13', 'id_14', 'id_15', 'id_16', 
+            'id_17', 'id_18', 'id_19', 'id_20', 'id_21', 
+            'id_22', 'id_23', 'id_24', 'id_25', 'id_26', 
+            'id_27', 'id_28', 'id_29','id_30', 'id_31', 
+            'id_32', 'id_33', 'id_34', 'id_35', 'id_36',
+            'id_37', 'id_38', 'DeviceType', 'DeviceInfo',
+            'ProductCD', 'card4', 'card6', 'M4','P_emaildomain',
+            'R_emaildomain', 'card1', 'card2', 'card3',  'card5', 
+            'addr1', 'addr2', 'M1', 'M2', 'M3', 'M5', 'M6', 
+            'M7', 'M8', 'M9','P_emaildomain_1', 'P_emaildomain_2',
+            'P_emaildomain_3', 'R_emaildomain_1', 'R_emaildomain_2', 
+            'R_emaildomain_3',  'DeviceType', 'DeviceInfo', 'device_name', 
+            'device_version', 'OS_id_30', 'version_id_30', 'browser_id_31',
+            'version_id_31', 'screen_width', 'screen_height', 'had_id']
+    cols_to_transform = [col for col in cats if col in X_train.columns]
+    cols_to_transform = [col for col in cats if col not in col_large_unqiues]
     
     #Getting dummies variables
-    df_dummies = pd.get_dummies( X_train, columns = cols_to_transform, drop_first=True )
+    df_dummies = pd.get_dummies( df, columns = cols_to_transform, drop_first=True )
     
     #Return to train and test dataframes and remove train columns 
-    X_train = df.loc[df['train'] == 1]
+    X_train = df_dummies.loc[df['train'] == 1]
     X_train.drop(columns = 'train', axis = 1, inplace = True)
-    X_test = df.loc[df['train'] == 0]
+    X_test = df_dummies.loc[df['train'] == 0]
     X_test.drop(columns = 'train', axis = 1, inplace = True)
     
     return X_train, X_test
@@ -131,14 +153,67 @@ def Feature_Engineering(df_train, df_test):
 
     mean_train = df_train['TransactionAmt'].mean()
     std_train = df_train['TransactionAmt'].std()
-    print(mean_train, std_train)
+    #print(mean_train, std_train)
     df_train['TransactionAmt'] = ((df_train['TransactionAmt'] - mean_train) / std_train)
     df_test['TransactionAmt'] = ((df_test['TransactionAmt'] - mean_train) / std_train)
+    
+    
+    #lets merge the two train and test data frames
+    df_train['train'] = 1
+    df_test['train'] = 0
+    df = pd.concat([df_train, df_test], axis = 0)
+    df.columns = df_train.columns
+    #Dealing with DeviceInfo
+    df['device_name'] = df['DeviceInfo'].str.split('/', expand=True)[0]
+    df['device_version'] = df['DeviceInfo'].str.split('/', expand=True)[1]
+    #id_30
+    df['OS_id_30'] = df['id_30'].str.split(' ', expand=True)[0]
+    df['version_id_30'] = df['id_30'].str.split(' ', expand=True)[1]
+    #browser
+    df['browser_id_31'] = df['id_31'].str.split(' ', expand=True)[0]
+    df['version_id_31'] = df['id_31'].str.split(' ', expand=True)[1]
+    #screen width
+    df['screen_width'] = df['id_33'].str.split('x', expand=True)[0]
+    df['screen_height'] = df['id_33'].str.split('x', expand=True)[1]
+    
+    df.drop(columns = ['DeviceInfo', 'id_30', 'id_31', 'id_33'], inplace = True)
+    
+    # New feature - day of week in which a transaction happened.
+    df['Transaction_day_of_week'] = np.floor((df['TransactionDT'] / (3600 * 24) - 1) % 7)
+    
+    # New feature - hour of the day in which a transaction happened.
+    df['Transaction_hour'] = np.floor(df['TransactionDT'] / 3600) % 24
+    
+    #device name
+    devices = {'SM':'Samsung', 'SAMSUNG':'Samsung', 'GT-':'Samsung', 
+               'Moto G':'Motorola', 'Moto':'Motorola',
+               'moto':'Motorola', 'LG-':'LG', 'rv:':'RV',
+               'HUAWEI':'Huawei', 'ALE-':'Huawei','-L':'Huawei', 
+               'Blade':'ZTE', 'BLADE':'ZTE', 'Linux':'Linux', 
+               'XT':'Sony', 'HTC':'HTC', 'ASUS':'Asus'}
+    for key, value in devices.items():
+        df.loc[df['device_name'].str.contains(key, na=False),
+               'device_name'] = value
+    df.loc[df['device_name'].isin(df['device_name'].value_counts()\
+                                  [df['device_name'].value_counts()\
+                                   < 200].index), 'device_name'] = "Others"
+    
+    
+    #Return to train and test dataframes and remove train columns 
+    df_train = df.loc[df['train'] == 1]
+    df_train.drop(columns = 'train', axis = 1, inplace = True)
+    df_test = df.loc[df['train'] == 0]
+    df_test.drop(columns = 'train', axis = 1, inplace = True)
 
     return df_train, df_test
 
 
 def data_cleaning_for_training(X_train, X_test):
+    """
+    For data cleaning
+    """
+    X_train['had_id'].fillna(0, inplace = True)
+    X_test['had_id'].fillna(0, inplace = True)
     many_null_cols_train = [col for col in X_train.columns if X_train[col].isnull()\
                             .sum() / X_train.shape[0] > 0.9]
     many_null_cols_test = [col for col in X_test.columns if X_test[col].isnull()\
@@ -299,3 +374,86 @@ def resumetable(df):
         summary.loc[summary['Name'] == name, 'Entropy'] = round(stats.entropy(df[name].value_counts(normalize=True), base=2),2) 
 
     return summary
+
+
+def fill_na_values(X_train, X_test):
+    """
+    this function is written to fill na values
+    """
+    # We found that that there is dependency between
+    # cards (e.g., сard2 and card1) values.
+    # We got the idea for this from this kernal 
+    # :https://www.kaggle.com/grazder/filling-card-nans
+    # for card in ['card2', 'card3', 'card4', 'card5', 'card6']:
+    # X_train, X_test = fill_card_nans(X_train, X_test, ['card1', card])
+    cats = ['id_12', 'id_13', 'id_14', 'id_15', 'id_16', 
+            'id_17', 'id_18', 'id_19', 'id_20', 'id_21', 
+            'id_22', 'id_23', 'id_24', 'id_25', 'id_26', 
+            'id_27', 'id_28', 'id_29','id_30', 'id_31', 
+            'id_32', 'id_33', 'id_34', 'id_35', 'id_36',
+            'id_37', 'id_38', 'DeviceType', 'DeviceInfo',
+            'ProductCD', 'card4', 'card6', 'M4','P_emaildomain',
+            'R_emaildomain', 'card1', 'card2', 'card3',  'card5', 
+            'addr1', 'addr2', 'M1', 'M2', 'M3', 'M5', 'M6', 
+            'M7', 'M8', 'M9','P_emaildomain_1', 'P_emaildomain_2',
+            'P_emaildomain_3', 'R_emaildomain_1', 'R_emaildomain_2', 
+            'R_emaildomain_3']
+    cats = [col for col in cats if col in X_train.columns]
+    X_train[cats] = X_train[cats].fillna('noinfo')
+    X_test[cats] = X_test[cats].fillna('noinfo')
+    
+    # fill na values in other cases with the median
+    X_train.fillna(X_train.median(), inplace = True)
+    X_test.fillna(X_test.median(), inplace = True)
+        
+    return X_train, X_test
+    
+
+
+def fill_card_nans(train, test, pair):
+    
+    """
+    This function is used to fill na values in
+    card features based on their correlation with other card values
+    
+    """
+    pair_values_train, pair_values_test = count_uniques(train, test, pair)
+    
+    print(f'In train{[pair[1]]} there are {train[pair[1]].isna().sum()} NaNs' )
+    print(f'In test{[pair[1]]} there are {test[pair[1]].isna().sum()} NaNs' )
+
+    print('Filling train...')
+    
+    for value in pair_values_train[pair_values_train == 1].index:
+        train[pair[1]][train[pair[0]] == value] = train[pair[1]][train[pair[0]] == value].value_counts().index[0]
+        
+    print('Filling test...')
+
+    for value in pair_values_test[pair_values_test == 1].index:
+        test[pair[1]][test[pair[0]] == value] = test[pair[1]][test[pair[0]] == value].value_counts().index[0]
+        
+    print(f'In train{[pair[1]]} there are {train[pair[1]].isna().sum()} NaNs' )
+    print(f'In test{[pair[1]]} there are {test[pair[1]].isna().sum()} NaNs' )
+    
+    return train, test
+
+
+
+
+def count_uniques(train, test, pair):
+    """
+    This function is written to find the unique values of cards
+    """
+    unique_train = []
+    unique_test = []
+
+    for value in train[pair[0]].unique():
+        unique_train.append(train[pair[1]][train[pair[0]] == value].value_counts().shape[0])
+
+    for value in test[pair[0]].unique():
+        unique_test.append(test[pair[1]][test[pair[0]] == value].value_counts().shape[0])
+
+    pair_values_train = pd.Series(data=unique_train, index=train[pair[0]].unique())
+    pair_values_test = pd.Series(data=unique_test, index=test[pair[0]].unique())
+    
+    return pair_values_train, pair_values_test

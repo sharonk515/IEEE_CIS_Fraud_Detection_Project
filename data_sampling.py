@@ -1,14 +1,20 @@
 import pandas as pd
-def data_sampling(df, sampling_number):
+
+
+def data_sampling(df_transaction, df_identity , sampling_number):
     """"
     The shape of my original data is (590540, 394)
     For this project, we are going to use just 10% of the data 
     because of the computational costs
-    df: is the original dataframe
+    df_transaction: is the original dataframe
+    df_identity: identity dataframe
     sampling_prec: the number of samples
     
     this function save the output as a csv file in data folder
     """
+    #Lets merege two data frames firstly
+    df_identity['had_id'] = 1
+    df=pd.merge(df_transaction,df_identity,how="left",on="TransactionID")
     
     print('The shape of the main data frame is:', df.shape)
     # To compute the precentage belonging to each class
