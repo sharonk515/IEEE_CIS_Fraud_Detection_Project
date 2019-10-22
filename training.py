@@ -4,14 +4,60 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import KFold,TimeSeriesSplit
 from sklearn.metrics import roc_auc_score, make_scorer
 from sklearn.linear_model import LogisticRegression
-from hyperopt import fmin, hp, tpe, Trials, space_eval, STATUS_OK, STATUS_RUNNING
-import gc
-
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+
+def random_forest_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jobs = None):
+    """
+    Thsi function is written to perform RF and tune hyperparameters
+    """
+    # Number of trees in random forest
+    n_estimators = [int(x) for x in np.linspace(start = 100, stop = 2000, num = 11)]
+    # Number of features to consider at every split
+    max_features = ['auto', 'sqrt']
+    # Maximum number of levels in tree
+    max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
+    max_depth.append(None)
+    # Minimum number of samples required to split a node
+    min_samples_split = [2, 5, 10]
+    # Minimum number of samples required at each leaf node
+    min_samples_leaf = [1, 2, 4]
+    # Method of selecting samples for training each tree
+    bootstrap = [True, False]
+    # Create the random grid
+    params = {'RF__n_estimators': n_estimators,
+              'RF__max_features': max_features,
+              'RF__max_depth': max_depth,
+              'RF__min_samples_split': min_samples_split,
+              'RF__min_samples_leaf': min_samples_leaf,
+              'RF__bootstrap': bootstrap}
+
+    # estimator
+    pipe = Pipeline([
+        ('SC',StandardScaler()),
+        ('RF',RandomForestClassifier())
+         ])
+    skf = StratifiedKFold(n_splits=nfolds, 
+                          shuffle=True, 
+                          random_state=1985)
+    
+    grid_search = RandomizedSearchCV(estimator = pipe,
+                                     param_distributions = params,
+                                     cv = skf, 
+                                     scoring = 'roc_auc',
+                                     n_jobs = n_jobs).fit(X_train, y_train)
+    print('The training roc_auc_score is:', round(grid_search.best_score_, 3))
+    print('The best parameters are:', grid_search.best_params_)
+    best_model = grid_search.best_estimator_
+    y_pred = best_model.predict(X_test)
+    test_auc_roc = round(roc_auc_score(y_test, y_pred), 2)
+    print('The test roc_auc_score is:', test_auc_roc)
+    return best_model, y_pred
 
 def logistic_regression_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jobs = None):
     """
@@ -43,7 +89,7 @@ def logistic_regression_param_selection(X_train, X_test, y_train, y_test, nfolds
     best_model = grid_search.best_estimator_
     y_pred = best_model.predict(X_test)
     test_auc_roc = round(roc_auc_score(y_test, y_pred), 2)
-    print('The training roc_auc_score is:', test_auc_roc)
+    print('The test roc_auc_score is:', test_auc_roc)
     return best_model, y_pred
 
 def Convert_LabelEncoder(X_train, X_test):
