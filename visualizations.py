@@ -2,6 +2,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, recall_score, f1_score, precision_score, f1_score
+
+
+def plot_roc_curve(X, y_obs, model, title_name):
+    """
+    This function is written to plot
+    roc curve
+    X: a data frame including our features
+    y_obs: a series including the labels of the observations
+    model: our trained model
+    title_name: title for model
+    
+    """
+    logit_roc_auc = roc_auc_score(y_obs, model.predict(X))
+    
+    #fpr = false positive, #tpr = true positive
+    fpr, tpr, thresholds = roc_curve(y_obs, model.predict_proba(X)[:,1])
+    plt.figure(figsize = (10, 8))
+    plt.plot(fpr, tpr, label='Logistic Regression (area = %0.2f)' % logit_roc_auc)
+    plt.plot([0, 1], [0, 1],'r--')
+    plt.xlabel('False Positive Rate', fontsize = 18)
+    plt.ylabel('True Positive Rate', fontsize = 18)
+    plt.title(title_name, fontsize = 20)
+    plt.legend(loc='best', fontsize = 18)
+    plt.savefig(f'img/{title_name}.png')
 
 
 def plot_distributions_target(df_IEEE):
@@ -54,8 +79,6 @@ def transactions_distribution(df_IEEE):
     g1.set_title("Transaction Amount (Log) Distribuition", fontsize=18)
     g1.set_xlabel("")
     g1.set_ylabel("Probability", fontsize=15)
-
-    plt.figure(figsize=(16,12))
     
     
 def Distribution_feature_fraud(df, feature, rotation = 0, feature_distribution = True, loc = 'best'):
