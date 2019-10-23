@@ -15,7 +15,7 @@ from sklearn.utils import resample
 from imblearn.over_sampling import SMOTE
 
 def imbalance_sampling_data(X_train, y_train, sampling_method):
-      '''
+    '''
     Balance the dataset using three different methods
     
     Parameters

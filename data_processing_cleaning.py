@@ -37,8 +37,8 @@ def PCA_Dimensionality_Reduction(X_train, X_test, features, n_components, plot_p
     #Lets repalce na values first
     train_pca = X_train[features].copy()
     test_pca = X_test[features].copy()
-    train_pca.fillna(train_pca.min() - 2, inplace = True)
-    test_pca.fillna(train_pca.min() - 2, inplace = True)
+    train_pca.fillna(train_pca.median(), inplace = True)
+    test_pca.fillna(train_pca.median(), inplace = True)
     
     #lets define a pipline
     pipeline = Pipeline([('scaling', MinMaxScaler()), ('pca', PCA(n_components=n_components))])
@@ -93,11 +93,23 @@ def PCA_Dimensionality_Reduction(X_train, X_test, features, n_components, plot_p
     return X_train_t, X_test_t 
 
 def Feature_Engineering(df_train, df_test):
-    """
-    This function is used to generate some
-    new features.
-    df: input dataframe
-    """
+    '''
+    Perform Feature Engineering to add new Features into dataset
+    
+    Parameters
+    ----------        
+        df_train     (pandas DataFrame) train dataframe
+        
+        df_test      (pandas DataFrame)  test dataframe
+        
+        
+    Returns
+    -------
+        df_train     (pandas DataFrame) output train dataframe with the new features
+        
+        df_test      (pandas DataFrame)  output test dataframe with the new features    
+        
+    '''
     #normalizing several columns to mean of each them for card1 and card4
     for col in ['TransactionAmt', 'D15']:
         for feature in ['card1', 'card4']:
@@ -239,9 +251,22 @@ def Feature_Engineering(df_train, df_test):
 
 
 def data_cleaning_for_training(X_train, X_test):
-    """
-    For data cleaning
-    """
+    '''
+    Clean the dataset
+    
+    Parameters
+    ----------        
+        X_train     (pandas DataFrame) train dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+        
+    Returns
+    -------
+        X_train     (pandas DataFrame) the cleaned output train dataframe
+        
+        X_test      (pandas DataFrame) the cleaned output test dataframe    
+        
+    '''
     X_train['had_id'].fillna(0, inplace = True)
     X_test['had_id'].fillna(0, inplace = True)
     many_null_cols_train = [col for col in X_train.columns if X_train[col].isnull()\
@@ -281,12 +306,19 @@ def clean_inf_nan(df):
 
 
 def data_cleaning_for_EDA(df):
-    """
-    The goal of this function is to clean
-    the dataframe
-    df: input data frame
-    output is a clean data frame
-    """
+    '''
+    Clean data for EDA purposes 
+    
+    Parameters
+    ----------        
+        df     (pandas DataFrame) input dataframe
+        
+        
+    Returns
+    -------
+        df     (pandas DataFrame) the cleaned output trained dataframe
+        
+    '''
     # Clean R_emaildomain and P_emaildomain for just plotting
     for feature in ['R_emaildomain', 'P_emaildomain']:
         df.loc[df[feature].str.contains('yahoo', na = False), feature]  = 'Yahoo Mail'
@@ -322,22 +354,25 @@ def data_cleaning_for_EDA(df):
     
     return df
 
-def remove_otliers(df, cols): 
-    """
-    The objective of this function is to remove outliers
-    
-    Here, we consider the data points beyoned mean + 3 * std
+def remove_otliers(df, cols):
+    '''
+    Remove outliers.
+    Consider the data points beyoned mean + 3 * std
     and below mean - 3 * std as the outliers
+
     
-    df: it is the main dataframe
-    
-    cols: it includes the list of columns
-    to be considered for removing outliers
-    
-    
-    it returen a series with no outliers
-    
-    """
+    Parameters
+    ----------        
+        df     (pandas DataFrame) the input dataframe
+        
+        cols      (list of strings)  a list of strings showing the name of columns 
+                                     to be considered for removing outliers
+        
+    Returns
+    -------
+        df     (pandas DataFrame) a dataframe with not outliers 
+        
+    '''
     
     for col in cols:
         # calculating mean and std of the array
@@ -359,10 +394,27 @@ def remove_otliers(df, cols):
     return df
 
 def reduce_mem_usage(df, verbose=True):
-    """
-    This function reduces the size of the dataframe
-    df: the input dataframe
-    """
+    '''
+    Reduce the size of input data frame
+    
+    Parameters
+    ----------        
+        df     (pandas DataFrame) input dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+        
+        features    (list of string) name of features which should be used for PCA
+        
+        n_components       (n_components)     number of components
+                                        
+        verbose     (Boolean)     Controls the verbosity
+                    Default True
+        
+    Returns
+    -------
+        df     (pandas DataFrame) the output dataframe   
+        
+    '''
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     start_mem = df.memory_usage().sum() / 1024**2    
     for col in df.columns:
@@ -392,6 +444,21 @@ def reduce_mem_usage(df, verbose=True):
 
 
 def resumetable(df):
+    '''
+    Return a summary of data
+    
+    Parameters
+    ----------        
+        df     (pandas DataFrame) input dataframe
+        
+    Returns
+    -------
+        summary     (pandas DataFrame) a summary including Name, 
+                     number of missing values, number of unique, 
+                     first value, second value, and the third values 
+                     in each column
+        
+    '''
     print(f"Dataset Shape: {df.shape}")
     summary = pd.DataFrame(df.dtypes,columns=['dtypes'])
     summary = summary.reset_index()
@@ -410,9 +477,23 @@ def resumetable(df):
 
 
 def fill_na_values(X_train, X_test):
-    """
-    This function is written to fill na values
-    """
+    '''
+    Fill null values
+    
+    Parameters
+    ----------        
+        X_train     (pandas DataFrame) train dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+    
+        
+    Returns
+    -------
+        X_train     (pandas DataFrame) output train dataframe with no NA
+        
+        X_test      (pandas DataFrame)  output test dataframe with no NA    
+        
+    '''
     # We found that that there is dependency between
     # cards (e.g., сard2 and card1) values.
     # We got the idea for this from this kernal 
@@ -440,53 +521,3 @@ def fill_na_values(X_train, X_test):
     X_test.fillna(X_test.median(), inplace = True)
         
     return X_train, X_test
-    
-
-
-def fill_card_nans(train, test, pair):
-    
-    """
-    This function is used to fill na values in
-    card features based on their correlation with other card values
-    
-    """
-    pair_values_train, pair_values_test = count_uniques(train, test, pair)
-    
-    print(f'In train{[pair[1]]} there are {train[pair[1]].isna().sum()} NaNs' )
-    print(f'In test{[pair[1]]} there are {test[pair[1]].isna().sum()} NaNs' )
-
-    print('Filling train...')
-    
-    for value in pair_values_train[pair_values_train == 1].index:
-        train[pair[1]][train[pair[0]] == value] = train[pair[1]][train[pair[0]] == value].value_counts().index[0]
-        
-    print('Filling test...')
-
-    for value in pair_values_test[pair_values_test == 1].index:
-        test[pair[1]][test[pair[0]] == value] = test[pair[1]][test[pair[0]] == value].value_counts().index[0]
-        
-    print(f'In train{[pair[1]]} there are {train[pair[1]].isna().sum()} NaNs' )
-    print(f'In test{[pair[1]]} there are {test[pair[1]].isna().sum()} NaNs' )
-    
-    return train, test
-
-
-
-
-def count_uniques(train, test, pair):
-    """
-    This function is written to find the unique values of cards
-    """
-    unique_train = []
-    unique_test = []
-
-    for value in train[pair[0]].unique():
-        unique_train.append(train[pair[1]][train[pair[0]] == value].value_counts().shape[0])
-
-    for value in test[pair[0]].unique():
-        unique_test.append(test[pair[1]][test[pair[0]] == value].value_counts().shape[0])
-
-    pair_values_train = pd.Series(data=unique_train, index=train[pair[0]].unique())
-    pair_values_test = pd.Series(data=unique_test, index=test[pair[0]].unique())
-    
-    return pair_values_train, pair_values_test
