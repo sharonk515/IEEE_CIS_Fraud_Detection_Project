@@ -42,9 +42,9 @@ def plot_roc_curve(X, y_obs, models, title_name, legend_names = None, colors = [
         plt.plot(fpr, tpr, 
                  label=f'{legend_names[idx]} (area = %0.2f)' % logit_roc_auc, color = colors[idx],
                 lw = 2)
-    fpr_tpr = pd.read_csv('Data/fpr_tpr.csv')
-    plt.plot(fpr_tpr['fpr'], fpr_tpr['tpr'], 
-                 label=f'Under Sampling/All data (area = 0.85)', color = '#A52A2A', lw = 2)
+#     fpr_tpr = pd.read_csv('Data/fpr_tpr.csv')
+#     plt.plot(fpr_tpr['fpr'], fpr_tpr['tpr'], 
+#                  label=f'Under Sampling/All data (area = 0.85)', color = '#A52A2A', lw = 2)
     plt.plot([0, 1], [0, 1],'k--')
     plt.xlabel('False Positive Rate', fontsize = 18)
     plt.ylabel('True Positive Rate', fontsize = 18)
