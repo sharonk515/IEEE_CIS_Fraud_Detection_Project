@@ -2,16 +2,26 @@ import pandas as pd
 
 
 def data_sampling(df_transaction, df_identity , sampling_number):
-    """"
-    The shape of my original data is (590540, 394)
-    For this project, we are going to use just 10% of the data 
-    because of the computational costs
-    df_transaction: is the original dataframe
-    df_identity: identity dataframe
-    sampling_prec: the number of samples
+    '''
+    Merege two data frames and 
+    return a random sample of the data 
     
-    this function save the output as a csv file in data folder
-    """
+    Parameters
+    ----------
+        
+        df_transaction     (pandas DataFrame) transaction data frame
+        
+        df_identity        (pandas DataFrame)  identity data frame
+        
+        sampling_number    (int)     the number of samples required
+                                        
+        
+    Returns
+    -------
+        save the results as csv file 
+        
+    '''
+    
     #Lets merege two data frames firstly
     df_identity['had_id'] = 1
     df=pd.merge(df_transaction,df_identity,how="left",on="TransactionID")

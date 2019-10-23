@@ -5,34 +5,68 @@ import numpy as np
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, recall_score, f1_score, precision_score, f1_score
 
 
-def plot_roc_curve(X, y_obs, model, title_name):
-    """
-    This function is written to plot
-    roc curve
-    X: a data frame including our features
-    y_obs: a series including the labels of the observations
-    model: our trained model
-    title_name: title for model
+def plot_roc_curve(X, y_obs, models, title_name, legend_names = None, colors = ['b']):
+    '''
+    plot Receiver operating characteristic (roc) curve
     
-    """
-    logit_roc_auc = roc_auc_score(y_obs, model.predict(X))
+    Parameters
+    ----------
+        
+        X     (pandas DataFrame) including features of data
+        
+        y_obs     (pandas DataFrame)  the label for observations
+        
+        
+        models  (list) a list including the trained clf models
+        
+        title_name       (str)    the title for plot
+        
+        legend_names (list) a list including strings showing 
+                            the legend for each model
+                            Defult is None
+        colors (list) a list including strings showing 
+                            the color for each model
+                            Defult is ['b']                                                
+        
+    Returns
+    -------
+        a figure including roc curve
+        
+    '''
     
-    #fpr = false positive, #tpr = true positive
-    fpr, tpr, thresholds = roc_curve(y_obs, model.predict_proba(X)[:,1])
     plt.figure(figsize = (10, 8))
-    plt.plot(fpr, tpr, label='Logistic Regression (area = %0.2f)' % logit_roc_auc)
-    plt.plot([0, 1], [0, 1],'r--')
+    for idx, model in enumerate(models):
+        logit_roc_auc = roc_auc_score(y_obs, model.predict(X))
+        #fpr = false positive, #tpr = true positive
+        fpr, tpr, thresholds = roc_curve(y_obs, model.predict_proba(X)[:,1])
+        plt.plot(fpr, tpr, 
+                 label=f'{legend_names[idx]} (area = %0.2f)' % logit_roc_auc, color = colors[idx],
+                lw = 2)
+    fpr_tpr = pd.read_csv('Data/fpr_tpr.csv')
+    plt.plot(fpr_tpr['fpr'], fpr_tpr['tpr'], 
+                 label=f'Under Sampling/All data (area = 0.85)', color = '#A52A2A', lw = 2)
+    plt.plot([0, 1], [0, 1],'k--')
     plt.xlabel('False Positive Rate', fontsize = 18)
     plt.ylabel('True Positive Rate', fontsize = 18)
     plt.title(title_name, fontsize = 20)
-    plt.legend(loc='best', fontsize = 18)
+    plt.legend(loc='best', fontsize = 16)
     plt.savefig(f'img/{title_name}.png')
 
 
 def plot_distributions_target(df_IEEE):
-    """
-    This function plots the distributions of the targte variable
-    """
+    '''
+    plots the distributions of the targte variable ('isFraud')
+    Also plots the distributions of TransactionAmt given the the targte variable ('isFraud')
+    
+    Parameters
+    ----------        
+        df_IEEE     (pandas DataFrame) input dataframe
+        
+    Returns
+    -------
+        plot described above
+        
+    '''
     
     df_IEEE['TransactionAmt'] = df_IEEE['TransactionAmt'].astype(float)
     total = len(df_IEEE)
@@ -82,11 +116,32 @@ def transactions_distribution(df_IEEE):
     
     
 def Distribution_feature_fraud(df, feature, rotation = 0, feature_distribution = True, loc = 'best'):
-    """
-    This function is written to plot the distruibution 
-    of the "feature" and also the distribution of fraud 
-    based on this feature
-    """
+    '''
+    plots distribution of the given feature ("feature") 
+    and also plots distribution of it given the target label 
+    
+    Parameters
+    ----------
+        
+        df     (pandas DataFrame) input dataframe
+        
+        feature                  (str) the name of feature for plotting
+                                        required only if clf has not already been fitted 
+        
+        rotation                 (int)  an integer which is used to rotate xticks in plot
+                                  Default: 0
+                                        
+        feature_distribution     (boolean) whether plots distribution of the given feature
+                                  Default: True
+        
+        loc                       (string)  Location of the legend
+                                        Default: 'best'
+        
+    Returns
+    -------
+        a plot described above
+        
+    '''
     # filling missing values
     df[feature].fillna('Nan', inplace = True)
     total = len(df)
@@ -127,3 +182,54 @@ def Distribution_feature_fraud(df, feature, rotation = 0, feature_distribution =
     g1.set_xlabel(f"{feature} Name", fontsize=17)
     g1.set_ylabel("Count", fontsize=17)
     g1.set_xticklabels(g1.get_xticklabels(), rotation=rotation)
+    
+def plot_feature_importances(clf, X_train, y_train=None, 
+                             top_n=10, figsize=(8,8), print_table=False, title="Feature Importances"):
+    '''
+    plot feature importances of a tree-based sklearn estimator
+    
+    Parameters
+    ----------
+        clf         (sklearn estimator) if not fitted, this routine will fit it
+        
+        X_train     (pandas DataFrame)
+        
+        y_train     (pandas DataFrame)  optional
+                                        required only if clf has not already been fitted 
+        
+        top_n       (int)               Plot the top_n most-important features
+                                        Default: 10
+                                        
+        figsize     ((int,int))         The physical size of the plot
+                                        Default: (8,8)
+        
+        print_table (boolean)           If True, print out the table of feature importances
+                                        Default: False
+        
+    Returns
+    -------
+        the pandas dataframe with the features and their importance
+        
+    '''
+    
+    __name__ = "plot_feature_importances"           
+            
+    feat_imp = pd.DataFrame({'importance':clf.feature_importances_})    
+    feat_imp['feature'] = X_train.columns
+    feat_imp.sort_values(by='importance', ascending=False, inplace=True)
+    feat_imp = feat_imp.iloc[:top_n]
+    
+    feat_imp.sort_values(by='importance', inplace=True)
+    feat_imp = feat_imp.set_index('feature', drop=True)
+    feat_imp.plot.barh(title=title, figsize=figsize)
+    plt.ylabel('')
+    plt.xlabel('Feature Importance Score ', fontsize = 16)
+    plt.yticks(fontsize = 18)
+    plt.title('Feature Importance Score using Random Forest', fontsize = 18)
+    plt.savefig(f'img/feature_importance.png', bbox_inches = "tight")
+    if print_table:
+        from IPython.display import display
+        print("Top {} features in descending order of importance".format(top_n))
+        display(feat_imp.sort_values(by='importance', ascending=False))
+        
+    return feat_imp

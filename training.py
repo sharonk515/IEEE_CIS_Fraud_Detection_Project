@@ -14,14 +14,25 @@ import numpy as np
 from sklearn.utils import resample
 from imblearn.over_sampling import SMOTE
 
-def sampling_data(X_train, y_train, sampling_method):
-    """
-    This function gets the X_train and y_train and
-    resample them using the following methods
-    1. Oversampling
-    2. Undersampling
-    2. SMOTE
-    """
+def imbalance_sampling_data(X_train, y_train, sampling_method):
+      '''
+    Balance the dataset using three different methods
+    
+    Parameters
+    ---------- 
+        X_train               (pandas DataFrame) input features
+        
+        y_train               (pandas DataFrame) label for data
+
+        
+        sampling_method       (string)    the method of sampling
+        [Oversampling, Undersampling, SMOTE]
+        
+    Returns
+    -------
+        X_train_o, y_train_o which are balanced dataframes
+        
+    '''
     df_s = X_train.reset_index(drop = True).copy()
     df_s['target'] = y_train.reset_index(drop = True)
     if sampling_method == 'Oversampling':
@@ -48,9 +59,35 @@ def sampling_data(X_train, y_train, sampling_method):
     return X_train_o, y_train_o
 
 def random_forest_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jobs = None):
-    """
-    Thsi function is written to perform RF and tune hyperparameters
-    """
+    '''
+    Perform gridsearchCV to fit random forest models 
+    and to find the optimum hyperparameters
+    
+    Parameters
+    ----------
+        
+        X_train     (pandas DataFrame) train dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+        
+        y_train     (pandas DataFrame) train labels
+        
+        y_test      (pandas DataFrame)  test labels
+
+        
+        nfolds       (int)     number of folds for cross validation
+                                        
+        n_jobs       (int or None) Number of jobs to run in parallel. 
+                      optional (default=None)
+                      None means 1 unless in a joblib.parallel_backend context.
+                      -1 means using all processors. See Glossary for more details.
+        
+    Returns
+    -------
+        best_model     trained model 
+        y_pred         (dataframe) the predicted value for test data set
+        
+    '''
     # Number of trees in random forest
     n_estimators = [int(x) for x in np.linspace(start = 100, stop = 2000, num = 11)]
     # Number of features to consider at every split
@@ -72,11 +109,6 @@ def random_forest_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jo
               'min_samples_leaf': min_samples_leaf,
               'bootstrap': bootstrap}
 
-    # estimator
-#     pipe = Pipeline([
-#         ('SC',StandardScaler()),
-#         ('RF',RandomForestClassifier())
-#          ])
     skf = StratifiedKFold(n_splits=nfolds, 
                           shuffle=True, 
                           random_state=1985)
@@ -95,9 +127,35 @@ def random_forest_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jo
     return best_model, y_pred
 
 def logistic_regression_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jobs = None):
-    """
-    Thsi function is written to perform logistic regression and tune hyperparameters
-    """
+    '''
+    Perform gridsearchCV to fit logistic lasso models 
+    and to find the optimum hyperparameters
+    
+    Parameters
+    ----------
+        
+        X_train     (pandas DataFrame) train dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+        
+        y_train     (pandas DataFrame) train labels
+        
+        y_test      (pandas DataFrame)  test labels
+
+        
+        nfolds       (int)     number of folds for cross validation
+                                        
+        n_jobs       (int or None) Number of jobs to run in parallel. 
+                      optional (default=None)
+                      None means 1 unless in a joblib.parallel_backend context.
+                      -1 means using all processors. See Glossary for more details.
+        
+    Returns
+    -------
+        best_model     trained model 
+        y_pred         (dataframe) the predicted value for test data set
+        
+    '''
     # Inverse of regularization strength; must be 
     # a positive float. Like in support vector machines,
     # smaller values specify stronger regularization.
@@ -128,9 +186,24 @@ def logistic_regression_param_selection(X_train, X_test, y_train, y_test, nfolds
     return best_model, y_pred
 
 def Convert_LabelEncoder(X_train, X_test):
-    """
-    For data cleaning
-    """
+    '''
+    encode categorical features using 
+    a one-hot or ordinal encoding scheme.
+    
+    Parameters
+    ----------
+        
+        X_train     (pandas DataFrame) train dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+        
+        
+    Returns
+    -------
+        X_train     (pandas DataFrame) train dataframe with one-hot encoding
+        X_test      (pandas DataFrame) test dataframe with one-hot encoding
+        
+    '''
     #concat X_train and X_test
     for col in X_train.columns:
         if X_train[col].dtype == 'object':
@@ -142,10 +215,23 @@ def Convert_LabelEncoder(X_train, X_test):
 
 
 def Convert_categorical_variables(X_train, X_test):
-    """
-    The goal of the function to convert categorical variables to dummies
-  
-    """
+    '''
+    Convert categorical variable into dummy/indicator variables.
+    
+    Parameters
+    ----------
+        
+        X_train     (pandas DataFrame) train dataframe
+        
+        X_test      (pandas DataFrame)  test dataframe
+        
+        
+    Returns
+    -------
+        X_train     (pandas DataFrame) train dataframe with one-hot encoding
+        X_test      (pandas DataFrame) test dataframe with one-hot encoding
+        
+    '''
     #concat X_train and X_test
     X_train['train'] = 1
     X_test['train'] = 0
