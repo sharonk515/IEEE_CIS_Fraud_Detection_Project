@@ -354,7 +354,7 @@ def data_cleaning_for_EDA(df):
     
     return df
 
-def remove_otliers(df, cols):
+def remove_outliers(df, cols):
     '''
     Remove outliers.
     Consider the data points beyoned mean + 3 * std
@@ -439,7 +439,8 @@ def reduce_mem_usage(df, verbose=True):
                 else:
                     df[col] = df[col].astype(np.float64)    
     end_mem = df.memory_usage().sum() / 1024**2
-    if verbose: print('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(end_mem, 100 * (start_mem - end_mem) / start_mem))
+    if verbose: print('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(
+        end_mem, 100 * (start_mem - end_mem) / start_mem))
     return df
 
 
@@ -471,7 +472,9 @@ def resumetable(df):
     summary['Third Value'] = df.loc[2].values
 
     for name in summary['Name'].value_counts().index:
-        summary.loc[summary['Name'] == name, 'Entropy'] = round(stats.entropy(df[name].value_counts(normalize=True), base=2),2) 
+        summary.loc[summary['Name'] 
+                    == name, 'Entropy'] = round(stats.entropy(
+                                                df[name].value_counts(normalize=True), base=2),2) 
 
     return summary
 

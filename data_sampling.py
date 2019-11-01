@@ -3,7 +3,7 @@ import pandas as pd
 
 def data_sampling(df_transaction, df_identity , sampling_number):
     '''
-    Merege two data frames and 
+    Merge two data frames and 
     return a random sample of the data 
     
     Parameters
@@ -24,14 +24,15 @@ def data_sampling(df_transaction, df_identity , sampling_number):
     
     #Lets merege two data frames firstly
     df_identity['had_id'] = 1
-    df=pd.merge(df_transaction,df_identity,how="left",on="TransactionID")
+    df = pd.merge(df_transaction, df_identity,how="left", on="TransactionID")
     
     print('The shape of the main data frame is:', df.shape)
     # To compute the precentage belonging to each class
     class_prec = list(df['isFraud'].value_counts(normalize = True).reset_index()['isFraud'])
     
     #The number of required samples for each class
-    class_number_samples = [sampling_number - int(class_prec[1]*sampling_number), int(class_prec[1]*sampling_number)]
+    class_number_samples = [sampling_number - int(class_prec[1]*sampling_number),
+                            int(class_prec[1]*sampling_number)]
     
     sampled_data = []
     for class_ in [0, 1]:

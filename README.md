@@ -14,8 +14,9 @@ The data used was provided by Vesta Corporation, the forerunner in guaranteed e-
 
 Files
 ------
-- **Main_IEEE.ipynb**: Final Technical Notebook
+- **Main_IEEE.ipynb**: Final Data Notebook
 - **data_processing_cleaning.py**: Functions for data cleaning and EDA
 - **data_sampling.py**: Functions for sampling data
 - **training.py**: Functions for training and modeling
 - **visualizations.py**: Functions for visualizations
+- **Fraud_presentation.py**: Presentation

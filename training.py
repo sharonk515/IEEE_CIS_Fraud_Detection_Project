@@ -89,11 +89,11 @@ def random_forest_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jo
         
     '''
     # Number of trees in random forest
-    n_estimators = [int(x) for x in np.linspace(start = 100, stop = 2000, num = 11)]
+    n_estimators = [int(x) for x in np.linspace(start=100, stop=2000, num=11)]
     # Number of features to consider at every split
     max_features = ['auto', 'sqrt']
     # Maximum number of levels in tree
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
+    max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
     max_depth.append(None)
     # Minimum number of samples required to split a node
     min_samples_split = [2, 5, 10]
@@ -126,7 +126,7 @@ def random_forest_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jo
     print('The test roc_auc_score is:', test_auc_roc)
     return best_model, y_pred
 
-def logistic_regression_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jobs = None):
+def logistic_regression_param_selection(X_train, X_test, y_train, y_test, nfolds, n_jobs=None):
     '''
     Perform gridsearchCV to fit logistic lasso models 
     and to find the optimum hyperparameters
@@ -208,7 +208,8 @@ def Convert_LabelEncoder(X_train, X_test):
     for col in X_train.columns:
         if X_train[col].dtype == 'object':
             le = LabelEncoder()
-            le.fit(list(X_train[col].astype(str).values) + list(X_test[col].astype(str).values))
+            le.fit(list(X_train[col].astype(str).values)
+                   + list(X_test[col].astype(str).values))
             X_train[col] = le.transform(list(X_train[col].astype(str).values))
             X_test[col] = le.transform(list(X_test[col].astype(str).values))
     return X_train, X_test
@@ -238,15 +239,16 @@ def Convert_categorical_variables(X_train, X_test):
     df = pd.concat([X_train, X_test], axis = 0)
     df.columns = X_train.columns
 
-    cols_to_transform = [col for col in df.columns if X_train[col].dtype == object]
+    cols_to_transform = [col for col in df.columns
+                         if X_train[col].dtype == object]
 
     #Getting dummies variables
-    df_dummies = pd.get_dummies( df, columns = cols_to_transform, drop_first=True )
+    df_dummies = pd.get_dummies(df, columns=cols_to_transform, drop_first=True)
     
     #Return to train and test dataframes and remove train columns 
     X_train = df_dummies.loc[df['train'] == 1]
-    X_train.drop(columns = 'train', axis = 1, inplace = True)
+    X_train.drop(columns='train', axis=1, inplace=True)
     X_test = df_dummies.loc[df['train'] == 0]
-    X_test.drop(columns = 'train', axis = 1, inplace = True)
+    X_test.drop(columns='train', axis=1, inplace=True)
     
     return X_train, X_test

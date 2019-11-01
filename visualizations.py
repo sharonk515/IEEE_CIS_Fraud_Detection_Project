@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, recall_score, f1_score, precision_score, f1_score
 
 
-def plot_roc_curve(X, y_obs, models, title_name, legend_names = None, colors = ['b']):
+def plot_roc_curve(X, y_obs, models, title_name, legend_names=None, colors=['b']):
     '''
     plot Receiver operating characteristic (roc) curve
     
@@ -34,13 +34,14 @@ def plot_roc_curve(X, y_obs, models, title_name, legend_names = None, colors = [
         
     '''
     
-    plt.figure(figsize = (10, 8))
+    plt.figure(figsize=(10, 8))
     for idx, model in enumerate(models):
         logit_roc_auc = roc_auc_score(y_obs, model.predict(X))
         #fpr = false positive, #tpr = true positive
         fpr, tpr, thresholds = roc_curve(y_obs, model.predict_proba(X)[:,1])
         plt.plot(fpr, tpr, 
-                 label=f'{legend_names[idx]} (area = %0.2f)' % logit_roc_auc, color = colors[idx],
+                 label=f'{legend_names[idx]} (area = %0.2f)' % logit_roc_auc,
+                 color=colors[idx],
                 lw = 2)
 #     fpr_tpr = pd.read_csv('Data/fpr_tpr.csv')
 #     plt.plot(fpr_tpr['fpr'], fpr_tpr['tpr'], 
@@ -104,18 +105,18 @@ def transactions_distribution(df_IEEE):
     plt.suptitle('Transaction Values Distribution', fontsize=22)
     plt.subplot(221)
     g = sns.distplot(df_IEEE[df_IEEE['TransactionAmt'] <= 1000]['TransactionAmt'])
-    g.set_title("Transaction Amount Distribuition <= 1000", fontsize=18)
+    g.set_title("Transaction Amount Distribution <= 1000", fontsize=18)
     g.set_xlabel("")
     g.set_ylabel("Probability", fontsize=15)
 
     plt.subplot(222)
     g1 = sns.distplot(np.log(df_IEEE['TransactionAmt']))
-    g1.set_title("Transaction Amount (Log) Distribuition", fontsize=18)
+    g1.set_title("Transaction Amount (Log) Distribution", fontsize=18)
     g1.set_xlabel("")
     g1.set_ylabel("Probability", fontsize=15)
     
     
-def Distribution_feature_fraud(df, feature, rotation = 0, feature_distribution = True, loc = 'best'):
+def Distribution_feature_fraud(df, feature, rotation=0, feature_distribution=True, loc='best'):
     '''
     plots distribution of the given feature ("feature") 
     and also plots distribution of it given the target label 
@@ -143,20 +144,20 @@ def Distribution_feature_fraud(df, feature, rotation = 0, feature_distribution =
         
     '''
     # filling missing values
-    df[feature].fillna('Nan', inplace = True)
+    df[feature].fillna('Nan', inplace=True)
     total = len(df)
     temp = pd.crosstab(df[feature], df['isFraud'], normalize='index') * 100
     temp = temp.reset_index()
     temp.rename(columns={0:'NoFraud', 1:'Fraud'}, inplace=True)
     result = df[feature].value_counts()\
-    .reset_index().sort_values(feature, ascending = False)['index']
+    .reset_index().sort_values(feature, ascending=False)['index']
 
 
     plt.figure(figsize=(14,6))
     
     if feature_distribution:
         plt.subplot(121)
-        g = sns.countplot(x=feature, data=df, order = result)
+        g = sns.countplot(x=feature, data=df, order=result)
 
         g.set_title(f"{feature} Distribution", fontsize=19)
         g.set_xlabel(f"{feature} Name", fontsize=17)
@@ -170,7 +171,7 @@ def Distribution_feature_fraud(df, feature, rotation = 0, feature_distribution =
                     ha="center", fontsize=14)
         g.set_xticklabels(g.get_xticklabels(), rotation=rotation)
         plt.subplot(122)
-    g1 = sns.countplot(x=f'{feature}', hue='isFraud', data=df, order = result)
+    g1 = sns.countplot(x=f'{feature}', hue='isFraud', data=df, order=result)
     plt.legend(title='Fraud', loc=loc, labels=['No', 'Yes'])
     gt = g1.twinx()
     gt = sns.pointplot(x=f'{feature}', y='Fraud', data=temp,
